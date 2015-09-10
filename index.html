@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Bangalore Routerrr</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    </head>
+    <body>
+        <div class="container">
+          	<section class="map">
+                <div id="mapCanvas" style="height: 500px"></div>
+            </section>
+
+            <section class="locations">
+            	<a href="#" route="start" class="btn btn-lg" index="0" role="button">Koramangla</a>
+            	<a href="#" class="btn btn-lg disabled" index="1" role="button">MG Road</a>
+            	<a href="#" class="btn btn-lg disabled" index="2" role="button">Indiranagar</a>
+            	<a href="#" class="btn btn-lg disabled" index="3" role="button">Marathahalli</a>
+            	<a href="#" route="end" class="btn btn-lg" index="4" role="button">Whitefield</a>
+
+            	<h3 style="display:none">Distance: <span id="dist" class="label label-default"></label></h3>
+            </section>
+
+            <div style="background-"
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script type="text/javascript"
+          src="https://maps.googleapis.com/maps/api/js">
+        </script>
+
+        <script type="text/javascript">
+        	var map, directionsDisplay, waypts = [], markers = [],
+        		directionsService = new google.maps.DirectionsService(),
+        		latLang = [{
+	        		"lat": "12.9259",
+	        		"long": "77.6229"
+	        	}, {
+	        		"lat": "12.9738",
+	        		"long": "77.6119"
+	        	}, {
+	        		"lat": "12.9699",
+	        		"long": "77.6499"
+	        	}, {
+	        		"lat": "12.9562",
+	        		"long": "77.7019"
+	        	},{
+	        		"lat": "12.9700",
+	        		"long": "77.7500"
+	        	}];
+
+        	$(document).ready(function() {
+				//Default setup
+				directionsDisplay = new google.maps.DirectionsRenderer();
+				var coor = new google.maps.LatLng(12.9667, 77.5667);
+				var myOptions = {
+					zoom: 8,
+					center: coor,
+					mapTypeId: google.maps.MapTypeId.ROADMAP
+				};
+				map = new google.maps.Map(document.getElementById("mapCanvas"), myOptions);
+				directionsDisplay.setMap(map);
+        	});
+
+        	$("a").click(function() {
+        		$(this).toggleClass("btn-primary");
+        		var startPoint, endPoint, distance = 0;
+        		if($("[index~='0']").hasClass("btn-primary") && $("[index~='4']").hasClass("btn-primary")) {
+        			$("[index~='1']").removeClass("disabled");
+        			$("[index~='2']").removeClass("disabled");
+        			$("[index~='3']").removeClass("disabled");
+        			startPoint = new google.maps.LatLng(latLang[0].lat, latLang[0].long);
+					endPoint = new google.maps.LatLng(latLang[4].lat, latLang[4].long);
+        		} else {
+        			$("[index~='1']").addClass("disabled");
+        			$("[index~='2']").addClass("disabled");
+        			$("[index~='3']").addClass("disabled");
+        		}
+
+        		var index = $(this).attr("index"), i;
+        		if(index !== "0" && index !== "4") {
+        			if((i = waypts.indexOf(index)) === -1) {
+	        			waypts.push(index);
+	        		} else {
+	        			waypts.splice(i, 1);
+	        		}
+
+        		} else {
+        			var obj = latLang[index];
+					var coor = new google.maps.LatLng(obj.lat, obj.long);
+					map.setZoom(12);
+					var route = $(this).attr("route");
+					if(!markers[route]) {
+						markers[route] = new google.maps.Marker({
+							position: coor,
+							map: map,
+							title: $(this).text()
+						});
+					} else {
+						markers[route].setMap(null);
+        				waypts = [];
+        				$("[index~='1']").addClass("disabled");
+	        			$("[index~='2']").addClass("disabled");
+	        			$("[index~='3']").addClass("disabled");
+	        			$("[index~='1']").removeClass("btn-primary");
+	        			$("[index~='2']").removeClass("btn-primary");
+	        			$("[index~='3']").removeClass("btn-primary");
+						markers[route] = null;
+					}
+        		}
+				
+				map.setZoom(12);
+
+				if(startPoint && endPoint) {
+					directionsDisplay.setMap(map);
+					var viaPoints = [];
+					waypts.forEach(function(pt) {
+						viaPoints.push({
+							location: new google.maps.LatLng(latLang[pt].lat, latLang[pt].long),
+							stopover: true
+						});
+					});
+					var request = {
+						origin: startPoint,
+						destination: endPoint,
+						waypoints: viaPoints,
+						travelMode: google.maps.TravelMode.DRIVING
+					};
+					directionsService.route(request, function(response, status) {
+						if (status == google.maps.DirectionsStatus.OK) {
+							directionsDisplay.setDirections(response);
+							var route = response.routes[0];
+							for (var k = 0; k < route.legs.length; k++) {
+								distance += route.legs[k].distance.value;
+							}
+							distance = distance/1000;
+							$("h3").show();
+							$("#dist").text(distance + " Km");
+						}
+					});
+				} else {
+					directionsDisplay.setMap(null);	
+				}
+				if(distance <= 0) {
+					$("h3").hide();	
+				}
+        	});
+
+        </script>
+            
+    </body>
+</html>
